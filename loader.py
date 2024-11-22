@@ -33,7 +33,7 @@ texts = {
         'status_extracting': "Распаковка обновления...",
         'status_download_complete': "Загрузка завершена. Начинается распаковка...",
         'status_extract_complete': "Распаковка завершена.",
-        'update_success': "Обновление прошло успешно.",
+        'update_success': "Обновление прошло успешно",
         'update_error': "Ошибка при обновлении: {e}",
         'error_title': "Ошибка",
         'admin_error': "Не удалось запустить с правами администратора: {e}",
@@ -51,7 +51,7 @@ texts = {
         'status_extracting': "Extracting update...",
         'status_download_complete': "Download completed. Starting extraction...",
         'status_extract_complete': "Extraction completed.",
-        'update_success': "Update was successful.",
+        'update_success': "Update was successful",
         'update_error': "Update error: {e}",
         'error_title': "Error",
         'admin_error': "Failed to run as administrator: {e}",
@@ -78,6 +78,11 @@ def get_system_language():
 language = get_system_language()
 
 
+def check_dpi_penguin_installed(extract_to):
+    """Проверка наличия программы 'DPI Penguin.exe' в директории с update.exe"""
+    return os.path.isfile(os.path.join(extract_to, "DPI Penguin.exe"))
+
+
 class UpdateWorker(QThread):
     progress_download = pyqtSignal(int)
     progress_extract = pyqtSignal(int)
@@ -94,6 +99,9 @@ class UpdateWorker(QThread):
 
     def run(self):
         try:
+            if not check_dpi_penguin_installed(self.extract_to):
+                raise Exception(f"Программа 'DPI Penguin.exe' не найдена в папке {self.extract_to}")
+            
             self.stop_service("WinDivert")
             self.terminate_process("winws.exe")
             self.terminate_process("goodbyedpi.exe")
