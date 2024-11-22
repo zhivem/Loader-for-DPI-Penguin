@@ -40,7 +40,7 @@ texts = {
         'update_title': "Обновление",
         'error_info': "Если произошла ошибка при обновлении, то установите программу вручную",
         'github_download': "Загрузить с GitHub",
-        'github_update': "GitHub Update"
+        'github_update': "Исходный код GitHub Update"
     },
     'en': {
         'window_title': "Program Update",
@@ -58,7 +58,7 @@ texts = {
         'update_title': "Update",
         'error_info': "If an error occurs during the update, install the program manually",
         'github_download': "Download from GitHub",
-        'github_update': "GitHub Update"
+        'github_update': "Source code GitHub update"
     }
 }
 
@@ -225,20 +225,20 @@ class UpdateWindow(QMainWindow):
 
         self.header_label = QLabel(self.texts['header'])
         self.header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label_font = QFont("Arial", 10)
+        label_font = QFont("Arial", 11)
         self.header_label.setFont(label_font)
         self.header_label.setWordWrap(True)
         layout.addWidget(self.header_label)
 
         self.status_label = QLabel(self.texts['status_initializing'])
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        status_font = QFont("Arial", 9)
+        status_font = QFont("Arial", 10)
         self.status_label.setFont(status_font)
         layout.addWidget(self.status_label)
 
         self.download_label = QLabel(self.texts['download_label'])
         self.download_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        download_label_font = QFont("Arial", 9)
+        download_label_font = QFont("Arial", 10)
         self.download_label.setFont(download_label_font)
         layout.addWidget(self.download_label)
 
@@ -249,7 +249,7 @@ class UpdateWindow(QMainWindow):
 
         self.extract_label = QLabel(self.texts['extract_label'])
         self.extract_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        extract_label_font = QFont("Arial", 9)
+        extract_label_font = QFont("Arial", 10)
         self.extract_label.setFont(extract_label_font)
         layout.addWidget(self.extract_label)
 
