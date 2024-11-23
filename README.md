@@ -1,4 +1,4 @@
-# Loader for DPI Penguin
+# Loader DPI Penguin
 
 <img src="https://github.com/zhivem/Loader-for-DPI-Penguin/blob/main/update_reset.ico" width=5% height=5%>
 
