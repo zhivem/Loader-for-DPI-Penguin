@@ -1,13 +1,16 @@
-import sys
-import os
 import ctypes
+import os
+import shutil
 import subprocess
+import sys
 import time
 import zipfile
-import requests
-import shutil
 from urllib.parse import urlencode
+import winreg 
 
+import requests
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -19,13 +22,153 @@ from PyQt6.QtWidgets import (
     QSpacerItem,
     QSizePolicy
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont
 
+# Встроенные QSS стили
+LIGHT_THEME_QSS = """
+/* light_theme.qss */
 
+/* Общие стили для всех виджетов */
+QWidget {
+    background-color: #ffffff; /* Чисто белый фон для современного вида */
+    color: #333333; /* Темно-серый текст для лучшей читаемости */
+    font-family: "Segoe UI", "Helvetica Neue", "Arial";
+    font-size: 10pt;
+}
+
+/* Стили для QLabel */
+QLabel {
+    color: #333333;
+    font-weight: normal;
+}
+
+/* Стили для QProgressBar */
+QProgressBar {
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    text-align: center;
+    height: 20px;
+}
+
+QProgressBar::chunk {
+    background-color: #0078d7; /* Акцентный синий цвет для заполненной части */
+    border-radius: 5px;
+}
+
+/* Стили для QMainWindow */
+QMainWindow {
+    background-color: #ffffff;
+}
+
+/* Стили для QMessageBox */
+QMessageBox {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+QPushButton {
+    background-color: #e7e7e7;
+    border: 1px solid #b0b0b0;
+    border-radius: 5px;
+    padding: 6px 12px;
+    color: #333333;
+}
+
+QPushButton:hover {
+    background-color: #d4d4d4;
+    border-color: #999999;
+}
+
+QPushButton:pressed {
+    background-color: #c0c0c0;
+    border-color: #7a7a7a;
+}
+
+/* Дополнительные стили для ссылок в QLabel */
+QLabel a {
+    color: #0078d7;
+    text-decoration: underline;
+}
+
+QLabel a:hover {
+    color: #005a9e;
+}
+"""
+
+DARK_THEME_QSS = """
+/* dark_theme.qss */
+
+/* Общие стили для всех виджетов */
+QWidget {
+    background-color: #2d2d2d; /* Немного светлее для улучшенной читаемости */
+    color: #e0e0e0; /* Светло-серый текст для контраста */
+    font-family: "Segoe UI", "Helvetica Neue", "Arial";
+    font-size: 10pt;
+}
+
+/* Стили для QLabel */
+QLabel {
+    color: #e0e0e0;
+    font-weight: normal;
+}
+
+/* Стили для QProgressBar */
+QProgressBar {
+    border: 1px solid #555555;
+    border-radius: 5px;
+    text-align: center;
+    height: 20px;
+    background-color: #3a3a3a;
+}
+
+QProgressBar::chunk {
+    background-color: #1e90ff; /* Акцентный синий цвет для заполненной части */
+    border-radius: 5px;
+}
+
+/* Стили для QMainWindow */
+QMainWindow {
+    background-color: #2d2d2d;
+}
+
+/* Стили для QMessageBox */
+QMessageBox {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+QPushButton {
+    background-color: #3a3a3a;
+    border: 1px solid #555555;
+    border-radius: 5px;
+    padding: 6px 12px;
+    color: #e0e0e0;
+}
+
+QPushButton:hover {
+    background-color: #505050;
+    border-color: #777777;
+}
+
+QPushButton:pressed {
+    background-color: #606060;
+    border-color: #888888;
+}
+
+/* Дополнительные стили для ссылок в QLabel */
+QLabel a {
+    color: #1e90ff;
+    text-decoration: underline;
+}
+
+QLabel a:hover {
+    color: #1c86ee;
+}
+"""
+
+# Тексты для локализации
 texts = {
     'ru': {
-        'window_title': "Обновление программы",
+        'window_title': "Обновление программы [Версия Loader v1.1]",
         'header': "Обновление/Переустановка программы до новой версии",
         'status_initializing': "Инициализация...",
         'download_label': "Процесс обновления:",
@@ -43,7 +186,7 @@ texts = {
         'github_update': "Исходный код GitHub Update"
     },
     'en': {
-        'window_title': "Program Update",
+        'window_title': "Program Update [Version Loader v1.1]",
         'header': "Updating/Reinstalling the program to the new version",
         'status_initializing': "Initializing...",
         'download_label': "Update process:",
@@ -62,7 +205,6 @@ texts = {
     }
 }
 
-
 def get_system_language():
     try:
         kernel32 = ctypes.windll.kernel32
@@ -74,14 +216,11 @@ def get_system_language():
     except Exception:
         return 'en'
 
-
 language = get_system_language()
 
-
 def check_dpi_penguin_installed(extract_to):
-    """Проверка наличия программы 'DPI Penguin.exe' в директории с update.exe"""
+    """Проверка наличия программы 'DPI Penguin.exe' в директории с Loader.exe"""
     return os.path.isfile(os.path.join(extract_to, "DPI Penguin.exe"))
-
 
 class UpdateWorker(QThread):
     progress_download = pyqtSignal(int)
@@ -101,7 +240,7 @@ class UpdateWorker(QThread):
         try:
             if not check_dpi_penguin_installed(self.extract_to):
                 raise Exception(f"Программа 'DPI Penguin.exe' не найдена в папке {self.extract_to}")
-            
+
             self.stop_service("WinDivert")
             self.terminate_process("winws.exe")
             self.terminate_process("goodbyedpi.exe")
@@ -109,6 +248,7 @@ class UpdateWorker(QThread):
             self.delete_files()
             self.download_update()
             self.extract_zip()
+            self.download_and_replace_config() 
             os.remove(self.download_path)
             self.restart_main_app()
             self.update_finished.emit(True, self.texts['update_success'])
@@ -204,16 +344,36 @@ class UpdateWorker(QThread):
                 self.progress_extract.emit(percent)
         time.sleep(1)
 
+    def download_and_replace_config(self):
+        """Загрузка и замена файла version_config.ini без отображения прогресса"""
+        try:
+            config_url = 'https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini'
+            # Определение пути к version_config.ini относительно основного пути обновления
+            config_relative_path = os.path.join("_internal", "setting_version", "version_config.ini")
+            config_path = os.path.join(self.extract_to, config_relative_path)
+
+            # Загрузка файла
+            response = requests.get(config_url)
+            response.raise_for_status()
+
+            # Создание необходимых директорий, если они отсутствуют
+            os.makedirs(os.path.dirname(config_path), exist_ok=True)
+
+            # Запись файла
+            with open(config_path, 'wb') as f:
+                f.write(response.content)
+        except Exception as e:
+            raise Exception(f"Не удалось обновить конфигурационный файл: {e}")
+
     def restart_main_app(self):
         subprocess.Popen([self.main_exe])
 
-
 class UpdateWindow(QMainWindow):
-    def __init__(self, public_key, main_exe, updater_exe, texts):
+    def __init__(self, public_key, main_exe, updater_exe, texts, theme='light'):
         super().__init__()
         self.texts = texts
         self.setWindowTitle(self.texts['window_title'])
-        self.setFixedSize(500, 250)
+        self.setFixedSize(500, 250)  # Вернули исходный размер окна
         self.public_key = public_key
         self.main_exe = main_exe
         self.updater_exe = updater_exe
@@ -271,10 +431,10 @@ class UpdateWindow(QMainWindow):
         error_info_text = (
             f"{self.texts['error_info']} "
             f"<a href='https://github.com/zhivem/DPI-Penguin/releases' "
-            f"style='color: #007BFF; text-decoration: underline;'>"
+            f"style='color: #0078d7; text-decoration: underline;'>"
             f"{self.texts['github_download']}</a><br>"
             f"<a href='https://github.com/zhivem/Loader-for-DPI-Penguin' "
-            f"style='color: #007BFF; text-decoration: underline;'>"
+            f"style='color: #0078d7; text-decoration: underline;'>"
             f"{self.texts['github_update']}</a>"
         )
         self.error_info_label = QLabel(error_info_text)
@@ -286,9 +446,14 @@ class UpdateWindow(QMainWindow):
 
         central_widget.setLayout(layout)
 
-        self.worker = UpdateWorker(public_key=self.public_key, download_path=self.download_path,
-                                   extract_to=self.extract_to, main_exe=self.main_exe,
-                                   updater_exe=self.updater_exe, texts=self.texts)
+        self.worker = UpdateWorker(
+            public_key=self.public_key,
+            download_path=self.download_path,
+            extract_to=self.extract_to,
+            main_exe=self.main_exe,
+            updater_exe=self.updater_exe,
+            texts=self.texts
+        )
         self.worker.progress_download.connect(self.update_download_progress)
         self.worker.progress_extract.connect(self.update_extract_progress)
         self.worker.update_finished.connect(self.on_update_finished)
@@ -314,13 +479,11 @@ class UpdateWindow(QMainWindow):
             QMessageBox.critical(self, self.texts['error_title'], message)
             self.close()
 
-
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
-
 
 def run_as_admin(texts):
     try:
@@ -339,10 +502,33 @@ def run_as_admin(texts):
         QMessageBox.critical(None, texts['error_title'], error_message)
         sys.exit(1)
 
+def get_system_theme():
+    """Автоматическое определение системной темы на Windows 10+."""
+    try:
+        registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+        key_path = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+        key = winreg.OpenKey(registry, key_path)
+        value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+        winreg.CloseKey(key)
+        return 'light' if value == 1 else 'dark'
+    except Exception as e:
+        print(f"Не удалось определить системную тему: {e}")
+        return 'light'  # По умолчанию
+
+def load_stylesheet(app, theme='light'):
+    """Применяет QSS стиль к приложению."""
+    try:
+        if theme == 'dark':
+            stylesheet = DARK_THEME_QSS
+        else:
+            stylesheet = LIGHT_THEME_QSS
+        app.setStyleSheet(stylesheet)
+    except Exception as e:
+        print(f"Не удалось применить стиль: {e}")
 
 def main():
     if not is_admin():
-        run_as_admin(texts)
+        run_as_admin(texts[language])
         sys.exit(0)
 
     public_key = 'https://disk.yandex.ru/d/ckFPOTqcG7XsTg'
@@ -354,10 +540,15 @@ def main():
         updater_exe = os.path.abspath(__file__)
 
     app = QApplication(sys.argv)
-    window = UpdateWindow(public_key, main_exe, updater_exe, texts[language])
+    
+    # Автоматическое определение темы
+    theme = get_system_theme()  # 'light' или 'dark'
+    
+    load_stylesheet(app, theme)
+
+    window = UpdateWindow(public_key, main_exe, updater_exe, texts[language], theme)
     window.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
