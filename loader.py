@@ -168,7 +168,7 @@ QLabel a:hover {
 # Тексты для локализации
 texts = {
     'ru': {
-        'window_title': "Обновление программы [Версия Loader v1.1]",
+        'window_title': "Обновление программы [Версия Loader v1.2]",
         'header': "Обновление/Переустановка программы до новой версии",
         'status_initializing': "Инициализация...",
         'download_label': "Процесс обновления:",
@@ -186,7 +186,7 @@ texts = {
         'github_update': "Исходный код GitHub Update"
     },
     'en': {
-        'window_title': "Program Update [Version Loader v1.1]",
+        'window_title': "Program Update [Version Loader v1.2]",
         'header': "Updating/Reinstalling the program to the new version",
         'status_initializing': "Initializing...",
         'download_label': "Update process:",
@@ -293,19 +293,29 @@ class UpdateWorker(QThread):
 
     def delete_files(self):
         base_path = self.extract_to
-        updater_name = os.path.basename(self.updater_exe)
+        updater_name = os.path.basename(self.updater_exe).lower()  # Имя текущего обновляющего файла
+        exe_name = "DPI Penguin.exe".lower()  # Имя основной программы
+        internal_folder = "_internal"  # Папка, которую нужно удалить
 
+    # Проходим по файлам в директории
         for item in os.listdir(base_path):
             item_path = os.path.join(base_path, item)
-            if item.lower() == updater_name.lower():
-                continue 
-            try:
-                if os.path.isfile(item_path) or os.path.islink(item_path):
-                    os.remove(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)
-            except Exception as e:
-                raise e
+            
+            # Удаляем только exe-файл программы и папку _internal
+            if item.lower() == updater_name or item.lower() == exe_name:
+                try:
+                    if os.path.isfile(item_path) or os.path.islink(item_path):
+                        os.remove(item_path)  # Удаляем файл .exe или ссылку
+                    elif os.path.isdir(item_path):
+                        shutil.rmtree(item_path)  # Удаляем папку
+                except Exception as e:
+                    print(f"Ошибка при удалении файла {item}: {e}")
+            elif item.lower() == internal_folder:
+                # Удаляем папку _internal, если она существует
+                try:
+                    shutil.rmtree(item_path)  # Удаляем папку _internal
+                except Exception as e:
+                    print(f"Ошибка при удалении папки {internal_folder}: {e}")
 
     def download_update(self):
         base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
@@ -373,7 +383,7 @@ class UpdateWindow(QMainWindow):
         super().__init__()
         self.texts = texts
         self.setWindowTitle(self.texts['window_title'])
-        self.setFixedSize(500, 250)  # Вернули исходный размер окна
+        self.setFixedSize(500, 250) 
         self.public_key = public_key
         self.main_exe = main_exe
         self.updater_exe = updater_exe
