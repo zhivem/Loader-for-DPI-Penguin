@@ -1,0 +1,67 @@
+/* light_theme.qss */
+
+/* Общие стили для всех виджетов */
+QWidget {
+    background-color: #ffffff; /* Чисто белый фон для современного вида */
+    color: #333333; /* Темно-серый текст для лучшей читаемости */
+    font-family: "Segoe UI", "Helvetica Neue", "Arial";
+    font-size: 10pt;
+}
+
+/* Стили для QLabel */
+QLabel {
+    color: #333333;
+    font-weight: normal;
+}
+
+/* Стили для QProgressBar */
+QProgressBar {
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    text-align: center;
+    height: 20px;
+}
+
+QProgressBar::chunk {
+    background-color: #0078d7; /* Акцентный синий цвет для заполненной части */
+    border-radius: 5px;
+}
+
+/* Стили для QMainWindow */
+QMainWindow {
+    background-color: #ffffff;
+}
+
+/* Стили для QMessageBox */
+QMessageBox {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+QPushButton {
+    background-color: #e7e7e7;
+    border: 1px solid #b0b0b0;
+    border-radius: 5px;
+    padding: 6px 12px;
+    color: #333333;
+}
+
+QPushButton:hover {
+    background-color: #d4d4d4;
+    border-color: #999999;
+}
+
+QPushButton:pressed {
+    background-color: #c0c0c0;
+    border-color: #7a7a7a;
+}
+
+/* Дополнительные стили для ссылок в QLabel */
+QLabel a {
+    color: #0078d7;
+    text-decoration: underline;
+}
+
+QLabel a:hover {
+    color: #005a9e;
+}
