@@ -384,10 +384,8 @@ class UpdateWindow(QMainWindow):
 
         self.texts = texts
         if hasattr(sys, "_MEIPASS"):
-            # Когда приложение запущено как .exe
             icon_path = os.path.join(sys._MEIPASS, "update_reset.ico")
         else:
-            # Когда приложение запущено как скрипт
             icon_path = "update_reset.ico"
             
         self.setWindowTitle(self.texts['window_title'])
