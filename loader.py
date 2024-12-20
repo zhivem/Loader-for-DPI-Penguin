@@ -23,152 +23,10 @@ from PyQt6.QtWidgets import (
     QSizePolicy
 )
 
-# Встроенные QSS стили
-LIGHT_THEME_QSS = """
-/* light_theme.qss */
-
-/* Общие стили для всех виджетов */
-QWidget {
-    background-color: #ffffff; /* Чисто белый фон для современного вида */
-    color: #333333; /* Темно-серый текст для лучшей читаемости */
-    font-family: "Segoe UI", "Helvetica Neue", "Arial";
-    font-size: 10pt;
-}
-
-/* Стили для QLabel */
-QLabel {
-    color: #333333;
-    font-weight: normal;
-}
-
-/* Стили для QProgressBar */
-QProgressBar {
-    border: 1px solid #cccccc;
-    border-radius: 5px;
-    text-align: center;
-    height: 20px;
-}
-
-QProgressBar::chunk {
-    background-color: #0078d7; /* Акцентный синий цвет для заполненной части */
-    border-radius: 5px;
-}
-
-/* Стили для QMainWindow */
-QMainWindow {
-    background-color: #ffffff;
-}
-
-/* Стили для QMessageBox */
-QMessageBox {
-    background-color: #ffffff;
-    color: #333333;
-}
-
-QPushButton {
-    background-color: #e7e7e7;
-    border: 1px solid #b0b0b0;
-    border-radius: 5px;
-    padding: 6px 12px;
-    color: #333333;
-}
-
-QPushButton:hover {
-    background-color: #d4d4d4;
-    border-color: #999999;
-}
-
-QPushButton:pressed {
-    background-color: #c0c0c0;
-    border-color: #7a7a7a;
-}
-
-/* Дополнительные стили для ссылок в QLabel */
-QLabel a {
-    color: #0078d7;
-    text-decoration: underline;
-}
-
-QLabel a:hover {
-    color: #005a9e;
-}
-"""
-
-DARK_THEME_QSS = """
-/* dark_theme.qss */
-
-/* Общие стили для всех виджетов */
-QWidget {
-    background-color: #2d2d2d; /* Немного светлее для улучшенной читаемости */
-    color: #e0e0e0; /* Светло-серый текст для контраста */
-    font-family: "Segoe UI", "Helvetica Neue", "Arial";
-    font-size: 10pt;
-}
-
-/* Стили для QLabel */
-QLabel {
-    color: #e0e0e0;
-    font-weight: normal;
-}
-
-/* Стили для QProgressBar */
-QProgressBar {
-    border: 1px solid #555555;
-    border-radius: 5px;
-    text-align: center;
-    height: 20px;
-    background-color: #3a3a3a;
-}
-
-QProgressBar::chunk {
-    background-color: #1e90ff; /* Акцентный синий цвет для заполненной части */
-    border-radius: 5px;
-}
-
-/* Стили для QMainWindow */
-QMainWindow {
-    background-color: #2d2d2d;
-}
-
-/* Стили для QMessageBox */
-QMessageBox {
-    background-color: #2d2d2d;
-    color: #e0e0e0;
-}
-
-QPushButton {
-    background-color: #3a3a3a;
-    border: 1px solid #555555;
-    border-radius: 5px;
-    padding: 6px 12px;
-    color: #e0e0e0;
-}
-
-QPushButton:hover {
-    background-color: #505050;
-    border-color: #777777;
-}
-
-QPushButton:pressed {
-    background-color: #606060;
-    border-color: #888888;
-}
-
-/* Дополнительные стили для ссылок в QLabel */
-QLabel a {
-    color: #1e90ff;
-    text-decoration: underline;
-}
-
-QLabel a:hover {
-    color: #1c86ee;
-}
-"""
-
 # Тексты для локализации
 texts = {
     'ru': {
-        'window_title': "Обновление программы [Версия Loader v1.2]",
+        'window_title': "Обновление программы [Версия Loader v1.3]",
         'header': "Обновление/Переустановка программы до новой версии",
         'status_initializing': "Инициализация...",
         'download_label': "Процесс обновления:",
@@ -186,7 +44,7 @@ texts = {
         'github_update': "Исходный код GitHub Update"
     },
     'en': {
-        'window_title': "Program Update [Version Loader v1.2]",
+        'window_title': "Program Update [Version Loader v1.3]",
         'header': "Updating/Reinstalling the program to the new version",
         'status_initializing': "Initializing...",
         'download_label': "Update process:",
@@ -297,7 +155,7 @@ class UpdateWorker(QThread):
         exe_name = "DPI Penguin.exe".lower()  # Имя основной программы
         internal_folder = "_internal"  # Папка, которую нужно удалить
 
-    # Проходим по файлам в директории
+        # Проходим по файлам в директории
         for item in os.listdir(base_path):
             item_path = os.path.join(base_path, item)
             
@@ -533,12 +391,21 @@ def get_system_theme():
         return 'light'  # По умолчанию
 
 def load_stylesheet(app, theme='light'):
-    """Применяет QSS стиль к приложению."""
+    """Применяет QSS стиль к приложению из внешних файлов."""
     try:
-        if theme == 'dark':
-            stylesheet = DARK_THEME_QSS
+        if getattr(sys, 'frozen', False):
+            base_path = sys._MEIPASS
         else:
-            stylesheet = LIGHT_THEME_QSS
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        if theme == 'dark':
+            qss_file = os.path.join(base_path, 'dark_theme.qss')
+        else:
+            qss_file = os.path.join(base_path, 'light_theme.qss')
+
+        with open(qss_file, 'r', encoding='utf-8') as f:
+            stylesheet = f.read()
+
         app.setStyleSheet(stylesheet)
     except Exception as e:
         print(f"Не удалось применить стиль: {e}")
@@ -558,8 +425,7 @@ def main():
 
     app = QApplication(sys.argv)
     
-    # Автоматическое определение темы
-    theme = get_system_theme()  # 'light' или 'dark'
+    theme = get_system_theme() 
     
     load_stylesheet(app, theme)
 
