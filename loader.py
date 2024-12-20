@@ -10,7 +10,7 @@ import winreg
 
 import requests
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -220,7 +220,7 @@ language = get_system_language()
 
 def check_dpi_penguin_installed(extract_to):
     """Проверка наличия программы 'DPI Penguin.exe' в директории с Loader.exe"""
-    return os.path.isfile(os.path.join(extract_to, "DPI Penguin.exe"))
+    return os.path.isfile(os.path.join(extract_to, "D.txt"))
 
 class UpdateWorker(QThread):
     progress_download = pyqtSignal(int)
@@ -381,9 +381,18 @@ class UpdateWorker(QThread):
 class UpdateWindow(QMainWindow):
     def __init__(self, public_key, main_exe, updater_exe, texts, theme='light'):
         super().__init__()
+
         self.texts = texts
+        if hasattr(sys, "_MEIPASS"):
+            # Когда приложение запущено как .exe
+            icon_path = os.path.join(sys._MEIPASS, "update_reset.ico")
+        else:
+            # Когда приложение запущено как скрипт
+            icon_path = "update_reset.ico"
+            
         self.setWindowTitle(self.texts['window_title'])
-        self.setFixedSize(500, 250) 
+        self.setWindowIcon(QIcon(icon_path))
+        self.setFixedSize(500, 260) 
         self.public_key = public_key
         self.main_exe = main_exe
         self.updater_exe = updater_exe
