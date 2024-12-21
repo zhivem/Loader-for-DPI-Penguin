@@ -2,6 +2,7 @@
 
 <img src="https://github.com/zhivem/Loader-for-DPI-Penguin/blob/main/update_reset.ico" width=5% height=5%>
 
+## Основной репозиторий
 > [!IMPORTANT]
 > Основной репозиторий программы: [DPI-Penguin](https://github.com/zhivem/DPI-Penguin)
 
