@@ -163,7 +163,7 @@ class UpdateWorker(QThread):
             if item.lower() == updater_name or item.lower() == exe_name:
                 try:
                     if os.path.isfile(item_path) or os.path.islink(item_path):
-                        os.remove(item_path)  # Удаляем файл .exe или ссылку
+                        os.remove(item_path)  # Удаляем файл .exe
                     elif os.path.isdir(item_path):
                         shutil.rmtree(item_path)  # Удаляем папку
                 except Exception as e:
@@ -176,7 +176,7 @@ class UpdateWorker(QThread):
                     print(f"Ошибка при удалении папки {internal_folder}: {e}")
 
     def download_update(self):
-        base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
+        base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?' # Апишка Яндекса
         final_url = base_url + urlencode({'public_key': self.public_key})
         response = requests.get(final_url)
         response.raise_for_status()
@@ -213,7 +213,7 @@ class UpdateWorker(QThread):
         time.sleep(1)
 
     def download_and_replace_config(self):
-        """Загрузка и замена файла version_config.ini без отображения прогресса"""
+        """Загрузка и замена файла version_config.ini"""
         try:
             config_url = 'https://raw.githubusercontent.com/zhivem/DPI-Penguin/main/setting_version/version_config.ini'
             # Определение пути к version_config.ini относительно основного пути обновления
@@ -388,7 +388,7 @@ def get_system_theme():
         return 'light' if value == 1 else 'dark'
     except Exception as e:
         print(f"Не удалось определить системную тему: {e}")
-        return 'light'  # По умолчанию
+        return 'light'  # По умолчанию светлая
 
 def load_stylesheet(app, theme='light'):
     """Применяет QSS стиль к приложению из внешних файлов."""
