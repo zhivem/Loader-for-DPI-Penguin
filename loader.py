@@ -78,7 +78,7 @@ language = get_system_language()
 
 def check_dpi_penguin_installed(extract_to):
     """Проверка наличия программы 'DPI Penguin.exe' в директории с Loader.exe"""
-    return os.path.isfile(os.path.join(extract_to, "D.txt"))
+    return os.path.isfile(os.path.join(extract_to, "DPI Penguin.exe"))
 
 class UpdateWorker(QThread):
     progress_download = pyqtSignal(int)
